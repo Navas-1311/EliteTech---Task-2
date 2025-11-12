@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat App</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="/socket.io/socket.io.js"></script> 
+</head>
+<body>
+
+    <div class="chat-container">
+        <h1>Live Chat Room</h1>
+        
+        <ul id="messages"></ul>
+        
+        <form id="form" action="">
+            <input id="m" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+        </form>
+    </div>
+
+    <script>
+        // Client-side JavaScript Logic
+        const socket = io(); 
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('m');
+        const messages = document.getElementById('messages');
+        
+        // Prompt for username and generate a unique name if empty
+        let username = prompt('Welcome! Please enter your name:');
+        if (!username || username.trim() === '') {
+            username = 'Guest ' + Math.floor(Math.random() * 1000); 
+        }
+
+        // Handle sending a message when the form is submitted
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); 
+            if (input.value.trim()) {
+                
+                // Send a JavaScript object with both name and message
+                const messageData = {
+                    user: username,
+                    text: input.value.trim()
+                };
+                
+                socket.emit('chat message', messageData);
+                
+                input.value = ''; 
+            }
+        });
+
+        // Handle receiving a message from the server
+        socket.on('chat message', (messageData) => {
+            const item = document.createElement('li');
+            
+            // Display name and message text inside the bubble
+            item.innerHTML = `
+                <div class="message-header">${messageData.user}</div>
+                <div class="message-body">${messageData.text}</div>
+            `;
+            
+            // Apply CSS class based on sender for left/right positioning
+            if (messageData.user === username) {
+                item.classList.add('my-message'); // Right side
+            } else {
+                item.classList.add('other-message'); // Left side
+            }
+
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        });
+    </script>
+</body>
+</html>
